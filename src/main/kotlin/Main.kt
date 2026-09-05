@@ -55,6 +55,30 @@ fun main() {
     println("Modelo: ${consola.modelo}")
     println("Tipo Usuario: ${consola.tipoUsuario}")
 
+    val clasica = ConsolaClasica(
+        "CC12CD",
+        "Sony",
+        "PlayStation 5",
+        "socio"
+    )
+
+    val moderna = ConsolaModerna(
+        "CM22TO",
+        "Nintendo",
+        "Switch",
+        "infantil"
+    )
+
+    val vr = ConsolaVR(
+        "VR44RG",
+        "Meta",
+        "Quest 3",
+        "Educacional",
+        true
+
+    )
+    
+
 }
 
 fun calcularCostoBase(minutos: Int, tarifaHora: Double ): Double {
