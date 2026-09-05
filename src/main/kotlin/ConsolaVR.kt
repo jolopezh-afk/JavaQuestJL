@@ -5,4 +5,14 @@ class ConsolaVR(codigo: String,
                 tipoUsuario: String,
                 val accesoriosPremium: Boolean) : Consola(codigo, marca, modelo, tipoUsuario){
     val tarifaBase: Double = 3000.0
+
+    override fun calcularTarifa(minutos: Int): Double {
+        val costoBase = (minutos / 60.0) * 3000.0
+
+        return if (accesoriosPremium) {
+            costoBase * 1.30
+        } else {
+            costoBase
+        }
+    }
 }

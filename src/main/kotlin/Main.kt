@@ -54,6 +54,7 @@ fun main() {
     println("Marca: ${consola.marca}")
     println("Modelo: ${consola.modelo}")
     println("Tipo Usuario: ${consola.tipoUsuario}")
+    println()
 
     val clasica = ConsolaClasica(
         "CC12CD",
@@ -77,7 +78,36 @@ fun main() {
         true
 
     )
-    
+
+    val consolas: List<Consola> = listOf(
+        ConsolaClasica(
+            "CC12CD",
+            "Sony",
+            "PlayStation 5",
+            "socio"
+        ),
+        ConsolaModerna(
+            "CM22TO",
+            "Nintendo",
+            "Switch",
+            "infantil"
+        ),
+        ConsolaVR(
+            "VR44RG",
+            "Meta",
+            "Quest 3",
+            "educacional",
+            true
+        )
+    )
+
+    for (consola in consolas) {
+        println("Código: ${consola.codigo}")
+        println("Marca: ${consola.marca}")
+        println("Modelo: ${consola.modelo}")
+        println("Tarifa: ${consola.calcularTarifa(60)}")
+        println()
+    }
 
 }
 

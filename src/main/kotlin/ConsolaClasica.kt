@@ -4,4 +4,15 @@ class ConsolaClasica(codigo: String,
                      modelo: String,
                      tipoUsuario: String) : Consola(codigo, marca, modelo, tipoUsuario) {
     val tarifaBase: Double = 800.0
+
+    override fun calcularTarifa(minutos: Int): Double {
+        val costoBase = (minutos / 60.0) * 800.0
+
+        return if (tipoUsuario == "socio"){
+            costoBase * .80
+        } else {
+            costoBase
+        }
+    }
 }
+
