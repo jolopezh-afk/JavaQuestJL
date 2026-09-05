@@ -109,6 +109,22 @@ fun main() {
         println()
     }
 
+    val puesto = Puesto(1)
+
+    println(puesto.describirEstado(puesto))
+    println()
+
+    puesto.estado = EstadoPuesto.EnProceso(
+        "registrando entrada")
+
+    println(puesto.describirEstado(puesto))
+    println()
+
+    puesto.estado = EstadoPuesto.EnReparacion(
+        "mantenimiento preventivo"
+    )
+    println(puesto.describirEstado(puesto))
+    println()
 }
 
 fun calcularCostoBase(minutos: Int, tarifaHora: Double ): Double {
