@@ -166,6 +166,67 @@ fun main() {
     } else{
         println("no existen puestos libres")
     }
+    println()
+
+    val tickets: List<Ticket> = listOf(
+        Ticket(
+            1,
+            "CC12CD",
+            "Clasica",
+            75,
+            1200.0
+        ),
+        Ticket(
+            2,
+            "CM22TO",
+            "Moderna",
+            18,
+            0.0
+        ),
+        Ticket(
+            3,
+            "VR44RG",
+            "VR",
+            120,
+            7000.0
+        )
+    )
+
+    val ticketVR = tickets.filter { ticket -> ticket.tipoConsola == "VR" }
+
+    val codigosAtendidos = tickets.map { ticket -> ticket.codigoConsola }
+
+    codigosAtendidos.forEach { codigo -> println(codigo) }
+
+    val recaudacion = tickets.sumOf { ticket -> ticket.monto }
+    println("Recaudacion total: $recaudacion")
+    println()
+
+    val disponibles = puestos.count { puesto ->
+        puesto.estado is EstadoPuesto.Libre
+    }
+
+    val codigos = tickets.map { ticket ->
+        ticket.codigoConsola
+    }
+
+    val total = tickets.sumOf { ticket ->
+        ticket.monto
+    }
+
+    val vr1 = tickets.filter { ticket ->
+        ticket.tipoConsola == "VR"
+    }
+
+    val ingresoVR = tickets
+        .filter { ticket ->
+            ticket.tipoConsola == "VR"
+        }
+        .sumOf { ticket ->
+            ticket.monto
+        }
+
+
 }
 
 fun calcularCostoBase(minutos: Int, tarifaHora: Double ): Double {
