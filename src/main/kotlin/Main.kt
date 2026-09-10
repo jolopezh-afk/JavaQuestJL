@@ -125,6 +125,47 @@ fun main() {
     )
     println(puesto.describirEstado(puesto))
     println()
+
+    val puestos: MutableList<Puesto> = mutableListOf()
+
+    for (numero in 1..10){
+        puestos.add(Puesto(numero))
+    }
+
+    for (puesto in puestos){
+        println(
+            "Puesto: ${puesto.numero}: " + puesto.describirEstado(puesto)
+        )
+    }
+
+    val historial: MutableList<Consola> = mutableListOf()
+
+    historial.add(ConsolaClasica("CC12CD", "Sony", "PlayStation 5", "socio"))
+
+    historial.add(ConsolaModerna("CC12CD", "Nintendo", "switch", "infantil"))
+
+    for (consola in historial){
+        println(
+            "${consola.codigo} -> ${consola.marca} -> ${consola.modelo}"
+        )
+    }
+
+    var puestoLibre: Puesto? = null
+
+    for (puesto in puestos){
+        if (puesto.estado is EstadoPuesto.Libre) {
+            puestoLibre = puesto
+            break
+        }
+    }
+
+    if (puestoLibre != null){
+        println(
+            "Primer puesto libre: ${puestoLibre.numero}"
+        )
+    } else{
+        println("no existen puestos libres")
+    }
 }
 
 fun calcularCostoBase(minutos: Int, tarifaHora: Double ): Double {
