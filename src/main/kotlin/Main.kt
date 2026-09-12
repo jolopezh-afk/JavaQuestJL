@@ -233,13 +233,73 @@ fun main() = runBlocking {
     }
 
     println("\nRegistrando entrada...")
-    val entradaExitosa = registrarEntrada(puestoss, consola)
-    if (entradaExitosa) println("Entrada completada con éxito.")
+    try {
 
+        registrarEntrada(puestos, consola)
+
+        println("Entrada completada con éxito.")
+    } catch (e: Exception) {
+        println("Error al registrar entrada: ${e.message}")
+    }
     println("\nRegistrando salida...")
-    val salidaExitosa = registrarSalida(puestoss, "CC12CD", 75)
-    if (salidaExitosa) println("Salida completada y puesto liberado.")
+    try {
+        registrarSalida(puestos, "CC12CD", 75)
+        println("Salida completada y puesto liberado.")
+    } catch (e: Exception) {
+        println("Error al registrar salida: ${e.message}")
+    }
 
+    println("=== INICIANDO PRUEBAS DE ROBUSTEZ ===")
+
+    println("\n--- 1. PRUEBA DE CÓDIGO INVÁLIDO ---")
+    val consolaMala = ConsolaClasica("123ABC", "Sony", "PS4", "socio")
+    try {
+        registrarEntrada(puestos, consolaMala)
+    } catch (e: IllegalArgumentException) {
+        println("[ERROR CONTROLADO] ${e.message}")
+    }
+
+    println("\n--- Llenando todos los puestos... ---")
+    for (i in 1..10) {
+        val letra = ('A' + (i % 26)).toString()
+        val codigoValido = "AA${i.toString().padStart(2, '0')}A$letra"
+        val c = ConsolaClasica(codigoValido, "Sony", "PS4", "socio")
+        try {
+            registrarEntrada(puestos, c)
+        } catch (e: IllegalStateException) {
+            println("[ERROR CONTROLADO] No se pudo ingresar $codigoValido: ${e.message}")
+        }
+    }
+
+    println("\n--- 2. PRUEBA DE CAPACIDAD COMPLETA ---")
+    val consolaExtra = ConsolaClasica("XX99XX", "Xbox", "Series X", "invitado")
+    try {
+        registrarEntrada(puestos, consolaExtra)
+    } catch (e: IllegalStateException) {
+        println("[ERROR CONTROLADO] ${e.message}")
+    }
+
+    println("\n--- 3. PRUEBA DE CONSOLA NO ENCONTRADA ---")
+    try {
+        registrarSalida(puestos, "ZZ00ZZ", 60)
+    } catch (e: NoSuchElementException) {
+        println("[ERROR CONTROLADO] ${e.message}")
+    }
+
+    println("\n--- 4. PRUEBA DE TARIFA INVÁLIDA ---")
+
+    registrarSalida(puestos, "AA01AB", 45)
+
+    val consolaRota = ConsolaAveriada("BB22BB")
+    registrarEntrada(puestos, consolaRota)
+
+    try {
+        registrarSalida(puestos, "BB22BB", 30)
+    } catch (e: IllegalStateException) {
+        println("[ERROR CONTROLADO] ${e.message}")
+    }
+
+    println("\n=== EL SISTEMA CONTINÚA FUNCIONANDO CORRECTAMENTE ===")
 
 }
 
@@ -271,54 +331,65 @@ fun aplicarBeneficioUsuario(monto: Double, tipoUsuario: String): Double {
 
 }
 
-suspend fun registrarEntrada(
-    puestos: MutableList<Puesto>,
-    consola: Consola
-): Boolean {
+suspend fun registrarEntrada(puestos: MutableList<Puesto>, consola: Consola) {
 
-    val puesto = puestos.firstOrNull {
-        it.estado is EstadoPuesto.Libre
-    } ?: return false
+    if (!validarCodigo(consola.codigo)) {
+        throw IllegalArgumentException("Código de consola inválido: ${consola.codigo}. Debe tener formato XX99XX.")
+    }
 
-    puesto.estado = EstadoPuesto.EnProceso(
-        "registrando entrada"
-    )
+    val puesto = puestos.firstOrNull { it.estado is EstadoPuesto.Libre }
+        ?: throw IllegalStateException("No existen puestos disponibles en este momento.")
 
+    puesto.estado = EstadoPuesto.EnProceso("registrando entrada")
     delay(3000)
+    puesto.estado = EstadoPuesto.EnJuego(consola)
 
-    puesto.estado = EstadoPuesto.EnJuego(
-        consola
-    )
-
-    return true
+    println(">> [SISTEMA] Entrada registrada: ${consola.codigo} en el puesto ${puesto.numero}.")
 }
 
-suspend fun registrarSalida(
-    puestos: MutableList<Puesto>,
-    codigo: String,
-    minutos: Int // Añadimos minutos para calcular la tarifa
-): Boolean {
-    val puesto = puestos.firstOrNull { p ->
-        val estado = p.estado
-        estado is EstadoPuesto.EnJuego && estado.consola.codigo == codigo
-    } ?: return false
+suspend fun registrarSalida(puestos: MutableList<Puesto>, codigo: String, minutos: Int) {
 
-    val estadoActual = puesto.estado
-    if (estadoActual !is EstadoPuesto.EnJuego) {
-        return false
-    }
+    val puesto = puestos.firstOrNull {
+        val estado = it.estado
+        estado is EstadoPuesto.EnJuego && estado.consola.codigo == codigo
+    } ?: throw NoSuchElementException("Consola no encontrada: No hay ninguna consola jugando con el código $codigo.")
+
+    val estadoActual = puesto.estado as EstadoPuesto.EnJuego
     val consola = estadoActual.consola
 
     puesto.estado = EstadoPuesto.EnProceso("calculando tarifa")
-
     delay(6500)
 
     val monto = consola.calcularTarifa(minutos)
 
+    if (!validarTarifa(consola, minutos, monto)) {
 
-    println(">> [Salida] Consola: ${consola.codigo} | Minutos: $minutos | Total a pagar: $$monto")
+        puesto.estado = EstadoPuesto.EnJuego(consola)
+        throw IllegalStateException("Error de facturación: La tarifa calculada ($$monto) no es válida.")
+    }
+
+    println(">> [SISTEMA] Salida completada | Consola: ${consola.codigo} | Total: $$monto")
     puesto.estado = EstadoPuesto.Libre
+}
+
+fun validarCodigo(codigo: String): Boolean {
+    val regex = Regex("^[A-Za-z]{2}[0-9]{2}[A-Za-z]{2}$")
+    return regex.matches(codigo)
+}
+
+
+fun validarTarifa(consola: Consola, minutos: Int, monto: Double): Boolean {
+    if (monto < 0.0) {
+        return false
+    }
+
+    if (monto == 0.0 && !(consola is ConsolaModerna && minutos < 20)) {
+        return false
+    }
 
     return true
 }
 
+class ConsolaAveriada(codigo: String) : Consola(codigo, "Test", "Test", "invitado") {
+    override fun calcularTarifa(minutos: Int): Double = -15.0
+}
