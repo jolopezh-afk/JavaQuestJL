@@ -1,5 +1,7 @@
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
-fun main() {
+fun main() = runBlocking {
     println("GameZone iniciado")
 
     val nombreSistema: String = "GameZone"
@@ -226,6 +228,18 @@ fun main() {
             ticket.monto
         }
 
+    val puestoss = MutableList(10) { indice ->
+        Puesto(indice + 1) // Asumiendo que el constructor de Puesto recibe su número
+    }
+
+    println("\nRegistrando entrada...")
+    val entradaExitosa = registrarEntrada(puestoss, consola)
+    if (entradaExitosa) println("Entrada completada con éxito.")
+
+    println("\nRegistrando salida...")
+    val salidaExitosa = registrarSalida(puestoss, "CC12CD", 75)
+    if (salidaExitosa) println("Salida completada y puesto liberado.")
+
 
 }
 
@@ -256,3 +270,55 @@ fun aplicarBeneficioUsuario(monto: Double, tipoUsuario: String): Double {
 
 
 }
+
+suspend fun registrarEntrada(
+    puestos: MutableList<Puesto>,
+    consola: Consola
+): Boolean {
+
+    val puesto = puestos.firstOrNull {
+        it.estado is EstadoPuesto.Libre
+    } ?: return false
+
+    puesto.estado = EstadoPuesto.EnProceso(
+        "registrando entrada"
+    )
+
+    delay(3000)
+
+    puesto.estado = EstadoPuesto.EnJuego(
+        consola
+    )
+
+    return true
+}
+
+suspend fun registrarSalida(
+    puestos: MutableList<Puesto>,
+    codigo: String,
+    minutos: Int // Añadimos minutos para calcular la tarifa
+): Boolean {
+    val puesto = puestos.firstOrNull { p ->
+        val estado = p.estado
+        estado is EstadoPuesto.EnJuego && estado.consola.codigo == codigo
+    } ?: return false
+
+    val estadoActual = puesto.estado
+    if (estadoActual !is EstadoPuesto.EnJuego) {
+        return false
+    }
+    val consola = estadoActual.consola
+
+    puesto.estado = EstadoPuesto.EnProceso("calculando tarifa")
+
+    delay(6500)
+
+    val monto = consola.calcularTarifa(minutos)
+
+
+    println(">> [Salida] Consola: ${consola.codigo} | Minutos: $minutos | Total a pagar: $$monto")
+    puesto.estado = EstadoPuesto.Libre
+
+    return true
+}
+
